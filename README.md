@@ -7,6 +7,13 @@ Syncs models from [Lemonade Server](https://lemonade-server.ai/) (and Ollama) in
 Requires Python ≥ 3.10 and [uv](https://docs.astral.sh/uv/).
 
 ```bash
+uvx occfg                        # run ad-hoc from PyPI
+uv tool install occfg            # or install persistently
+```
+
+For development:
+
+```bash
 uv sync --extra dev   # or: uv sync for runtime deps only
 ```
 

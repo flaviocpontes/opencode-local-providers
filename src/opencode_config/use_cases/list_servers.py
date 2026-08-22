@@ -11,30 +11,30 @@ def list_servers(
     clients: dict[str, ModelServerClient],
     show_all: bool = False,
 ) -> list[dict]:
-    servers = [s for s in server_registry.load_servers() if s.enabled]
     result = []
-    for server in servers:
-        name = server.name or f"{server.host}:{server.port}"
+    for server in server_registry.load_servers():
+        base = {
+            "id": server.id,
+            "name": server.name or f"{server.host}:{server.port}",
+            "host": server.host,
+            "port": server.port,
+            "type": server.type,
+            "enabled": server.enabled,
+            "models": [],
+            "error": None,
+        }
+        if not server.enabled:
+            result.append(base)
+            continue
         try:
             models = clients[server.type].fetch_models(server)
         except ServerError as exc:
-            result.append({
-                "name": name,
-                "host": server.host,
-                "port": server.port,
-                "models": [],
-                "error": exc.cause,
-            })
+            base["error"] = exc.cause
+            result.append(base)
             continue
-        chat_models = [
+        base["models"] = [
             m for m in models
             if is_chat_model(m) and (show_all or m.downloaded)
         ]
-        result.append({
-            "name": name,
-            "host": server.host,
-            "port": server.port,
-            "models": chat_models,
-            "error": None,
-        })
+        result.append(base)
     return result

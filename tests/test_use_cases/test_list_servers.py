@@ -12,6 +12,16 @@ class FakeServerRegistry:
     def load_servers(self):
         return self._servers
 
+    def add_server(self, server):
+        from dataclasses import replace
+        return replace(server, id=server.id or server.host)
+
+    def remove_server(self, server_id):
+        return False
+
+    def set_enabled(self, server_id, enabled):
+        return False
+
 
 class FakeModelServerClient:
     def __init__(self, models=None):

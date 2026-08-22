@@ -1,6 +1,28 @@
 # AGENTS.md
 
-Syncs models from Lemonade Servers into opencode.json providers.
+`occfg` — manages local inference servers (Lemonade, Ollama) and syncs their models into `opencode.json` providers.
+
+## CLI surface
+
+```
+occfg server add <host> [--type lemonade|ollama] [--port N] [--name NAME]
+occfg server remove <id>
+occfg server enable <id>
+occfg server disable <id>
+occfg server list [--show-all]
+occfg sync [-n|--dry-run] [--show-all]
+```
+
+Global flags: `--servers <path>`, `--opencode <path>`, `--version`. Defaults: registry at `~/.config/opencode/local-inference-servers.json`; `opencode.json` at `./opencode.json` if present else `~/.config/opencode/opencode.json`. Linux-only.
+
+## Server lifecycle semantics
+
+- **id**: minted at `add` time (slug of `--name`, else slug of host; `-2` suffix on collision). Immutable afterwards — `name` is display-only. Legacy registry entries without ids adopt the old provider-key derivation on the next write.
+- **add**: probes the server's models endpoint first; unreachable → nothing written, exit 1. Success → registry entry (`enabled: true`) + seeded provider entry in `opencode.json`.
+- **disable**: registry `"enabled": false` + provider `"disabled": true` (models kept; opencode hides it from the picker). Sync skips disabled servers.
+- **enable**: flips both flags back. Models refresh on next `occfg sync`.
+- **remove**: deletes the registry entry AND the provider entry in one command.
+- **sync**: upsert-only refresh of enabled servers. Zero enabled servers → no-op success. Unreachable server → entry left unchanged, exit 1.
 
 ## Project Structure (Clean Architecture)
 
@@ -16,15 +38,18 @@ opencode_config/
 │       ├── use_cases/               # Layer 1 — Application business rules
 │       │   ├── __init__.py
 │       │   ├── sync.py              #   Orchestrate fetch + merge per server
-│       │   └── list_servers.py      #   Summarise servers & models
+│       │   ├── list_servers.py      #   Summarise servers & models
+│       │   ├── server_management.py #   add/remove/enable/disable use cases
+│       │   └── helpers.py           #   chat-model filter, provider entry build
 │       ├── adapters/                # Layer 2 — Interface adapters
 │       │   ├── __init__.py
 │       │   ├── lemonade_client.py   #   HTTP → Lemonade /api/v1/models
-│       │   ├── server_registry.py   #   Read/write lemonade-servers.json
+│       │   ├── ollama_client.py     #   HTTP → Ollama /api/tags + /api/show
+│       │   ├── server_registry.py   #   Read/write local-inference-servers.json
 │       │   └── opencode_config.py   #   Read/write opencode.json
 │       └── cli/                     # Layer 3 — Frameworks & drivers
 │           ├── __init__.py
-│           └── main.py              #   argparse dispatcher
+│           └── main.py              #   argparse subcommand dispatcher
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py                  # Shared fixtures (tmp paths, fake server)
@@ -34,12 +59,18 @@ opencode_config/
 │   ├── test_use_cases/
 │   │   ├── __init__.py
 │   │   ├── test_sync.py
-│   │   └── test_list_servers.py
-│   └── test_adapters/
-│       ├── __init__.py
-│       ├── test_lemonade_client.py
-│       ├── test_server_registry.py
-│       └── test_opencode_config.py
+│   │   ├── test_list_servers.py
+│   │   └── test_server_management.py
+│   ├── test_adapters/
+│   │   ├── __init__.py
+│   │   ├── test_lemonade_client.py
+│   │   ├── test_ollama_client.py
+│   │   ├── test_server_registry.py
+│   │   └── test_opencode_config.py
+│   ├── test_cli/
+│   │   └── test_main.py
+│   └── test_e2e/
+│       └── test_empty_models.py
 ├── main.py                          # Legacy entrypoint (delegates to src)
 ├── pyproject.toml
 ├── PRD.md
@@ -132,9 +163,9 @@ Schema reference: https://github.com/opencode-ai/opencode/blob/main/opencode-sch
 
 ## Tooling
 
-- **Package manager**: `uv`. Run with `uv run python -m opencode_config` or `uv run pytest`.
+- **Package manager**: `uv`. Run with `uv run occfg …`, `uv run python -m opencode_config`, or `uv run pytest`.
 - **Tests**: `pytest` with `pytest-cov` for coverage. Config in `pyproject.toml`.
-- **Dependencies**: `requests` (HTTP), `pytest` / `pytest-cov` (dev).
-- **Entry point**: `uv run python -m opencode_config` (via `src/opencode_config/__main__.py`).
+- **Dependencies**: `httpx` (HTTP), `pytest` / `pytest-cov` / `pytest-httpserver` (dev).
+- **Entry points**: `occfg` console script (`[project.scripts]` in pyproject.toml) and `python -m opencode_config`.
 - **Lint**: `ruff` (dev dependency). Format check with `ruff check`.
 - **PyCharm project** — `.idea/` directory may appear; ignore it.

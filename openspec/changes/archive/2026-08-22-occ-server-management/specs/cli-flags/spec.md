@@ -1,10 +1,4 @@
-# cli-flags Specification
-
-## Purpose
-
-Defines the semantics and validation of the command-line interface: subcommand dispatch, non-destructive dry runs, model visibility filtering, and version reporting.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Dry run MUST NOT write the config file
 
@@ -20,21 +14,7 @@ When invoked with `-n`/`--dry-run` on the `occ sync` subcommand, the tool SHALL 
 - **THEN** no file is created
 - **AND** stdout contains the generated provider configuration
 
-### Requirement: Non-downloaded models are excluded by default
-
-By default, sync and server listing SHALL include only models marked as downloaded. When `--show-all` is passed, both SHALL include models regardless of download status.
-
-#### Scenario: Default sync filters undownloaded models
-- **WHEN** the server reports a chat model with `downloaded: false` and sync runs without `--show-all`
-- **THEN** that model does not appear in the generated configuration
-
-#### Scenario: Show-all includes undownloaded models
-- **WHEN** the server reports a chat model with `downloaded: false` and the tool runs with `--show-all`
-- **THEN** that model appears in the output (sync config or listing)
-
-#### Scenario: Non-chat models stay excluded under show-all
-- **WHEN** the server reports a model whose recipe or labels exclude it from chat (e.g. image, tts, embeddings, transcription)
-- **THEN** it is excluded regardless of `--show-all`
+## ADDED Requirements
 
 ### Requirement: CLI exposes verb subcommands
 
@@ -52,10 +32,10 @@ The `occ` command SHALL expose the subcommands `server add`, `server remove`, `s
 - **WHEN** the package is installed via pip/uv
 - **THEN** the `occ` executable is available on PATH and behaves identically to `python -m opencode_config`
 
-### Requirement: Version flag reports package version
+## REMOVED Requirements
 
-`--version` SHALL print the installed package version and exit 0, using the package metadata as the source of truth (with a static fallback when the package is not installed).
+### Requirement: Mode flags MUST be mutually exclusive
 
-#### Scenario: Version from installed metadata
-- **WHEN** the package is installed and the tool runs with `--version**
-- **THEN** stdout shows the installed version string and the exit code is 0
+**Reason**: The mode flags `-l`/`--list-servers` and `--init-servers` are replaced by subcommands; mutual exclusion is enforced structurally by argparse subparsers.
+
+**Migration**: Use `occ server list` instead of `-l`/`--list-servers`, and `occ server add <host>` instead of `--init-servers`.

@@ -1,6 +1,6 @@
 import re
 
-from opencode_config.domain.entities import Model
+from opencode_config.domain.entities import Server, Model
 
 
 # Mirrors Lemonade v11.7.0 model_types.h: chat-indicator labels beat deployment labels,
@@ -56,3 +56,28 @@ def model_to_entry(model: Model) -> dict:
         limits["output"] = 32768
     entry["limit"] = limits
     return entry
+
+
+BASE_URL_PATHS = {"lemonade": "/api/v1", "ollama": "/v1"}
+
+
+def build_provider_entry(server: Server, models: list[Model], show_all: bool = False):
+    """Shared by sync and server add: one provider entry dict + warnings."""
+    chat_models = [
+        m for m in models
+        if is_chat_model(m) and (show_all or m.downloaded)
+    ]
+    warnings = [
+        f"{m.id}: context {m.max_context_window} < 65536 (opencode wants 64k+)"
+        for m in chat_models
+        if m.max_context_window and m.max_context_window < 65536
+    ]
+    entry = {
+        "npm": "@ai-sdk/openai-compatible",
+        "name": server.name or f"{server.type.capitalize()} ({server.host})",
+        "options": {
+            "baseURL": f"http://{server.host}:{server.port}{BASE_URL_PATHS[server.type]}"
+        },
+        "models": {m.id: model_to_entry(m) for m in chat_models},
+    }
+    return entry, warnings

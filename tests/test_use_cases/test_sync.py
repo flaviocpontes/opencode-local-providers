@@ -14,6 +14,16 @@ class FakeServerRegistry:
     def load_servers(self) -> list[Server]:
         return self._servers
 
+    def add_server(self, server: Server) -> Server:
+        from dataclasses import replace
+        return replace(server, id=server.id or server.host)
+
+    def remove_server(self, server_id: str) -> bool:
+        return False
+
+    def set_enabled(self, server_id: str, enabled: bool) -> bool:
+        return False
+
 
 class FakeModelServerClient:
     def __init__(self, models: list[Model] | None = None):
@@ -51,13 +61,46 @@ class FakeOpenCodeConfig:
 # ── Tests ──────────────────────────────────────────────────────────────
 
 class TestSyncModels:
-    def test_no_servers(self):
+    def test_no_servers_is_noop_success(self):
         registry = FakeServerRegistry([])
         client = FakeModelServerClient()
         opencode = FakeOpenCodeConfig({})
         result = sync_models(registry, {"lemonade": client}, opencode)
-        assert result.summary == []
-        assert opencode.written == {"provider": {}}
+        assert result.summary == ["no enabled servers — nothing to do"]
+        assert result.wrote is False
+        assert opencode.written is None
+
+    def test_all_disabled_is_noop_success(self):
+        registry = FakeServerRegistry([
+            Server(host="192.168.0.20", name="Off", enabled=False),
+        ])
+        client = FakeModelServerClient([Model(id="m1", recipe="llamacpp")])
+        opencode = FakeOpenCodeConfig({})
+        result = sync_models(registry, {"lemonade": client}, opencode)
+        assert result.summary == ["no enabled servers — nothing to do"]
+        assert opencode.written is None
+        assert result.failures == []
+
+    def test_disabled_server_skipped_enabled_synced(self):
+        registry = FakeServerRegistry([
+            Server(host="192.168.0.20", name="Off", enabled=False),
+            Server(host="192.168.0.7", name="On"),
+        ])
+        client = FakeModelServerClient([Model(id="m1", recipe="llamacpp")])
+        opencode = FakeOpenCodeConfig({})
+        result = sync_models(registry, {"lemonade": client}, opencode)
+        assert result.summary == ["on: 1 models"]
+        assert "off" not in opencode.written["provider"]
+
+    def test_server_id_is_provider_key(self):
+        registry = FakeServerRegistry([
+            Server(host="192.168.0.20", name="Renamed", id="stable-id"),
+        ])
+        client = FakeModelServerClient([Model(id="m1", recipe="llamacpp")])
+        opencode = FakeOpenCodeConfig({})
+        sync_models(registry, {"lemonade": client}, opencode)
+        assert "stable-id" in opencode.written["provider"]
+        assert opencode.written["provider"]["stable-id"]["name"] == "Renamed"
 
     def test_single_server_no_models(self):
         registry = FakeServerRegistry([

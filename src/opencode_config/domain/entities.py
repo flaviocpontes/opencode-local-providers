@@ -8,6 +8,7 @@ class Server:
     name: str | None = None
     enabled: bool = True
     type: str = "lemonade"
+    id: str | None = None  # immutable identity; minted at add time
 
 
 DEFAULT_PORTS = {"lemonade": 13305, "ollama": 11434}

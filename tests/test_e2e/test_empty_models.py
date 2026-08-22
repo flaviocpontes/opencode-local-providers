@@ -50,7 +50,7 @@ def _api_payload(models: list[dict]) -> dict:
 # ── Scenario: empty server registry ────────────────────────────────────
 
 class TestEmptyRegistry:
-    def test_no_servers_returns_empty(self, server_registry_path, opencode_path):
+    def test_no_servers_is_noop(self, server_registry_path, opencode_path):
         """A blank server registry file with no entries."""
         server_registry_path.write_text(json.dumps({"servers": []}) + "\n")
         registry = JsonServerRegistry(server_registry_path)
@@ -58,10 +58,9 @@ class TestEmptyRegistry:
         opencode = JsonOpenCodeConfig(opencode_path)
 
         result = sync_models(registry, {"lemonade": client}, opencode)
-        assert result.summary == []
-
-        config = json.loads(opencode_path.read_text())
-        assert config == {"provider": {}}
+        assert result.summary == ["no enabled servers — nothing to do"]
+        assert result.wrote is False
+        assert not opencode_path.exists()
 
 
 # ── Scenario: server has no models ─────────────────────────────────────

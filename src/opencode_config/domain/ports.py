@@ -25,6 +25,18 @@ class ModelServerClient(Protocol):
 class ServerRegistryPort(Protocol):
     def load_servers(self) -> list[Server]: ...
 
+    def add_server(self, server: Server) -> Server:
+        """Persist a new server entry; returns it with the minted id."""
+        ...
+
+    def remove_server(self, server_id: str) -> bool:
+        """Delete the entry; False if no server has that id."""
+        ...
+
+    def set_enabled(self, server_id: str, enabled: bool) -> bool:
+        """Flip the entry's enabled flag; False if no server has that id."""
+        ...
+
 
 @runtime_checkable
 class OpenCodeConfigPort(Protocol):
