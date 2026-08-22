@@ -1,14 +1,15 @@
-"""Adapter tests for HttpLemonadeClient — real HTTP via pytest-httpserver."""
+"""Adapter tests for HttpModelServerClient — real HTTP via pytest-httpserver."""
 
 import pytest
 import httpx
 from pytest_httpserver import HTTPServer
 
-from opencode_config.adapters.lemonade_client import HttpLemonadeClient
+from opencode_config.adapters.lemonade_client import HttpModelServerClient
 from opencode_config.domain.entities import Server
+from opencode_config.domain.ports import ServerError
 
 
-class TestLemonadeClient:
+class TestModelServerClient:
     def test_fetch_models_returns_parsed_models(self, httpserver: HTTPServer):
         httpserver.expect_request("/api/v1/models").respond_with_json({
             "data": [
@@ -23,7 +24,7 @@ class TestLemonadeClient:
         })
 
         server = Server(host="localhost", port=httpserver.port)
-        client = HttpLemonadeClient()
+        client = HttpModelServerClient()
         models = client.fetch_models(server)
 
         assert len(models) == 2
@@ -41,7 +42,7 @@ class TestLemonadeClient:
             {"data": [], "object": "list"}
         )
         server = Server(host="localhost", port=httpserver.port)
-        client = HttpLemonadeClient()
+        client = HttpModelServerClient()
         assert client.fetch_models(server) == []
 
     def test_handles_missing_optional_fields(self, httpserver: HTTPServer):
@@ -50,7 +51,7 @@ class TestLemonadeClient:
             "object": "list",
         })
         server = Server(host="localhost", port=httpserver.port)
-        client = HttpLemonadeClient()
+        client = HttpModelServerClient()
         models = client.fetch_models(server)
         assert len(models) == 1
         assert models[0].max_context_window is None
@@ -62,12 +63,38 @@ class TestLemonadeClient:
             status=500
         )
         server = Server(host="localhost", port=httpserver.port)
-        client = HttpLemonadeClient()
-        with pytest.raises(httpx.HTTPError):
+        client = HttpModelServerClient()
+        with pytest.raises(ServerError) as exc_info:
             client.fetch_models(server)
+        assert exc_info.value.cause == "HTTP 500"
 
     def test_connection_refused(self):
         server = Server(host="localhost", port=1)
-        client = HttpLemonadeClient(timeout=1)
-        with pytest.raises(httpx.HTTPError):
+        client = HttpModelServerClient()
+        with pytest.raises(ServerError) as exc_info:
             client.fetch_models(server)
+        assert exc_info.value.cause == "connection refused"
+
+    def test_garbage_body_raises(self, httpserver: HTTPServer):
+        httpserver.expect_request("/api/v1/models").respond_with_data(
+            "not json at all"
+        )
+        server = Server(host="localhost", port=httpserver.port)
+        client = HttpModelServerClient()
+        with pytest.raises(ServerError) as exc_info:
+            client.fetch_models(server)
+        assert exc_info.value.cause == "invalid response"
+
+    def test_error_label_uses_server_name(self, httpserver: HTTPServer):
+        httpserver.expect_request("/api/v1/models").respond_with_data(
+            status=500
+        )
+        server = Server(host="localhost", port=httpserver.port, name="Desktop")
+        client = HttpModelServerClient()
+        with pytest.raises(ServerError) as exc_info:
+            client.fetch_models(server)
+        assert exc_info.value.server_label == "Desktop"
+
+    def test_timeout_maps_to_short_cause(self):
+        from opencode_config.adapters.lemonade_client import _short_cause
+        assert _short_cause(httpx.ReadTimeout("read timed out")) == "timeout"

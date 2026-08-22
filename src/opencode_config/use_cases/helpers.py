@@ -3,16 +3,20 @@ import re
 from opencode_config.domain.entities import Model
 
 
-SKIP_LABELS = {"embeddings", "transcription", "tts", "image"}
-CHAT_RECIPES = {"llamacpp"}
+# Mirrors Lemonade v11.7.0 model_types.h: chat-indicator labels beat deployment labels,
+# so an any-to-text LLM labelled ["vision", ..., "transcription"] is still chat.
+CHAT_LABELS = {"chat", "vision", "reasoning", "tool-calling", "tools", "chat-transcription"}
+SKIP_LABELS = {"embeddings", "embedding", "reranking", "transcription", "tts", "image"}
+CHAT_RECIPES = {"llamacpp", "flm", "ryzenai-llm", "vllm", "ollama"}
 
 
 def is_chat_model(model: Model) -> bool:
     if model.recipe not in CHAT_RECIPES:
         return False
-    if SKIP_LABELS & set(model.labels):
-        return False
-    return True
+    labels = set(model.labels)
+    if CHAT_LABELS & labels:
+        return True
+    return not (SKIP_LABELS & labels)
 
 
 JUNK_COMPOUNDS = [
@@ -22,8 +26,8 @@ JUNK_TOKENS = {"Thinking", "NEO-CODE", "Di", "IMatrix", "MAX"}
 
 
 def derive_display_name(model_id: str) -> str:
-    name = model_id
-    name = re.sub(r"^user\.", "", name)
+    name = re.sub(r"^user\.", "", model_id)
+    name = re.sub(r":latest$", "", name)
     name = name.replace("-it-", "-")
     name = re.sub(r"-GGUF.*$", "", name)
     for pattern in JUNK_COMPOUNDS:

@@ -1,6 +1,7 @@
 """Use case tests for list_servers — inject fake adapters."""
 
 from opencode_config.domain.entities import Server, Model
+from opencode_config.domain.ports import ServerError
 from opencode_config.use_cases.list_servers import list_servers
 
 
@@ -12,7 +13,7 @@ class FakeServerRegistry:
         return self._servers
 
 
-class FakeLemonadeClient:
+class FakeModelServerClient:
     def __init__(self, models=None):
         self._models = models or []
 
@@ -20,15 +21,26 @@ class FakeLemonadeClient:
         return self._models
 
 
+class FlakyModelServerClient:
+    def __init__(self, bad_host, models):
+        self._bad_host = bad_host
+        self._models = models
+
+    def fetch_models(self, server):
+        if server.host == self._bad_host:
+            raise ServerError(server.name or server.host, "connection refused")
+        return self._models
+
+
 class TestListServers:
     def test_empty_registry(self):
-        result = list_servers(FakeServerRegistry([]), FakeLemonadeClient())
+        result = list_servers(FakeServerRegistry([]), {"lemonade": FakeModelServerClient()})
         assert result == []
 
     def test_single_server_no_models(self):
         registry = FakeServerRegistry([Server(host="localhost", port=13305)])
-        client = FakeLemonadeClient([])
-        result = list_servers(registry, client)
+        client = FakeModelServerClient([])
+        result = list_servers(registry, {"lemonade": client})
         assert len(result) == 1
         assert result[0]["name"] == "localhost:13305"
         assert result[0]["models"] == []
@@ -41,19 +53,19 @@ class TestListServers:
             Model(id="m1", recipe="llamacpp"),
             Model(id="m2", recipe="llamacpp"),
         ]
-        client = FakeLemonadeClient(models)
-        result = list_servers(registry, client)
+        client = FakeModelServerClient(models)
+        result = list_servers(registry, {"lemonade": client})
         assert len(result[0]["models"]) == 2
 
     def test_filters_non_chat_models(self):
         registry = FakeServerRegistry([
             Server(host="localhost", port=13305, name="Test"),
         ])
-        client = FakeLemonadeClient([
+        client = FakeModelServerClient([
             Model(id="chat", recipe="llamacpp"),
             Model(id="img", recipe="sd-cpp", labels=["image"]),
         ])
-        result = list_servers(registry, client)
+        result = list_servers(registry, {"lemonade": client})
         assert len(result[0]["models"]) == 1
         assert result[0]["models"][0].id == "chat"
 
@@ -62,8 +74,50 @@ class TestListServers:
             Server(host="192.168.0.20", port=13305, name="Desktop"),
             Server(host="192.168.0.7", port=13305, name="Laptop"),
         ])
-        client = FakeLemonadeClient([Model(id="m", recipe="llamacpp")])
-        result = list_servers(registry, client)
+        client = FakeModelServerClient([Model(id="m", recipe="llamacpp")])
+        result = list_servers(registry, {"lemonade": client})
         assert len(result) == 2
         assert result[0]["name"] == "Desktop"
         assert result[1]["name"] == "Laptop"
+
+    def test_default_filters_undownloaded(self):
+        registry = FakeServerRegistry([Server(host="localhost", port=13305)])
+        client = FakeModelServerClient([
+            Model(id="have", recipe="llamacpp", downloaded=True),
+            Model(id="want", recipe="llamacpp", downloaded=False),
+        ])
+        result = list_servers(registry, {"lemonade": client})
+        assert [m.id for m in result[0]["models"]] == ["have"]
+
+    def test_show_all_includes_undownloaded(self):
+        registry = FakeServerRegistry([Server(host="localhost", port=13305)])
+        client = FakeModelServerClient([
+            Model(id="have", recipe="llamacpp", downloaded=True),
+            Model(id="want", recipe="llamacpp", downloaded=False),
+        ])
+        result = list_servers(registry, {"lemonade": client}, show_all=True)
+        assert [m.id for m in result[0]["models"]] == ["have", "want"]
+
+    def test_show_all_still_excludes_non_chat(self):
+        registry = FakeServerRegistry([Server(host="localhost", port=13305)])
+        client = FakeModelServerClient([
+            Model(id="llm", recipe="llamacpp", downloaded=False),
+            Model(id="img", recipe="sd-cpp", labels=["image"], downloaded=False),
+        ])
+        result = list_servers(registry, {"lemonade": client}, show_all=True)
+        assert [m.id for m in result[0]["models"]] == ["llm"]
+
+    def test_dead_server_becomes_error_row(self):
+        registry = FakeServerRegistry([
+            Server(host="192.168.0.20", port=13305, name="Dead"),
+            Server(host="192.168.0.7", port=13305, name="Alive"),
+        ])
+        client = FlakyModelServerClient(
+            "192.168.0.20", [Model(id="m1", recipe="llamacpp")]
+        )
+        result = list_servers(registry, {"lemonade": client})
+
+        assert result[0]["error"] == "connection refused"
+        assert result[0]["models"] == []
+        assert result[1]["error"] is None
+        assert len(result[1]["models"]) == 1

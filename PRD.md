@@ -39,11 +39,15 @@ Each server in the registry becomes one provider entry. The provider key is deri
 
 ### Model filtering
 
-Only LLM-type chat models are included. The `recipe` field determines inclusion:
+Only LLM-type chat models are included (Lemonade v11.7.0). The `recipe` field determines inclusion:
 
 | `recipe` | Type | Include? |
 |---|---|---|
 | `llamacpp` | LLM (text/vision) | ✅ |
+| `flm` | LLM (FastFlowLM, NPU) | ✅ |
+| `ryzenai-llm` | LLM (ONNX NPU) | ✅ |
+| `vllm` | LLM (vLLM GPU, experimental) | ✅ |
+| `ollama` | LLM (Ollama servers) | ✅ |
 | `sd-cpp` | Image generation | ❌ |
 | `whispercpp` | Audio transcription | ❌ |
 | `kokoro` | Text-to-speech | ❌ |
@@ -73,7 +77,7 @@ The Lemonade API has no separate `name` field. The display name is derived from 
 | `max_context_window` (if present, > 0) | `models.<id>.limit.context` |
 | `labels` contains `"vision"` | `models.<id>.modalities.input: ["text", "image", "pdf"]` |
 | `labels` contains `"reasoning"` | `models.<id>.limit.output`: higher cap (e.g. 65536) |
-| `labels` contains `"embeddings"`, `"transcription"`, `"tts"`, `"image"` | Skip model entirely |
+| `labels` contains `"embeddings"`, `"embedding"`, `"reranking"`, `"transcription"`, `"tts"`, `"image"` (and no chat-indicator label) | Skip model entirely |
 
 - **Provider block**:
   - `npm`: `"@ai-sdk/openai-compatible"`

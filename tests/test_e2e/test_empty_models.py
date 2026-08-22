@@ -10,7 +10,7 @@ import json
 
 from pytest_httpserver import HTTPServer
 
-from opencode_config.adapters.lemonade_client import HttpLemonadeClient
+from opencode_config.adapters.lemonade_client import HttpModelServerClient
 from opencode_config.adapters.opencode_config import JsonOpenCodeConfig
 from opencode_config.adapters.server_registry import JsonServerRegistry
 from opencode_config.use_cases.sync import sync_models
@@ -54,11 +54,11 @@ class TestEmptyRegistry:
         """A blank server registry file with no entries."""
         server_registry_path.write_text(json.dumps({"servers": []}) + "\n")
         registry = JsonServerRegistry(server_registry_path)
-        client = HttpLemonadeClient()
+        client = HttpModelServerClient()
         opencode = JsonOpenCodeConfig(opencode_path)
 
-        results = sync_models(registry, client, opencode)
-        assert results == []
+        result = sync_models(registry, {"lemonade": client}, opencode)
+        assert result.summary == []
 
         config = json.loads(opencode_path.read_text())
         assert config == {"provider": {}}
@@ -83,11 +83,11 @@ class TestServerHasNoModels:
         opencode_path.write_text(json.dumps(initial_config, indent=2) + "\n")
 
         registry = JsonServerRegistry(server_registry_path)
-        client = HttpLemonadeClient()
+        client = HttpModelServerClient()
         opencode = JsonOpenCodeConfig(opencode_path)
 
-        results = sync_models(registry, client, opencode)
-        assert results == ["localhost: 0 models"]
+        result = sync_models(registry, {"lemonade": client}, opencode)
+        assert result.summary == ["localhost: 0 models"]
 
         config = json.loads(opencode_path.read_text())
         assert config["provider"]["ollama"] == initial_config["provider"]["ollama"]
@@ -119,11 +119,11 @@ class TestSingleServerMixedModels:
         ) + "\n")
 
         registry = JsonServerRegistry(server_registry_path)
-        client = HttpLemonadeClient()
+        client = HttpModelServerClient()
         opencode = JsonOpenCodeConfig(opencode_path)
 
-        results = sync_models(registry, client, opencode)
-        assert results == ["my-server: 3 models"]
+        result = sync_models(registry, {"lemonade": client}, opencode)
+        assert result.summary == ["my-server: 3 models"]
 
         config = json.loads(opencode_path.read_text())
         models = config["provider"]["my-server"]["models"]
@@ -167,11 +167,11 @@ class TestMultipleServers:
         }) + "\n")
 
         registry = JsonServerRegistry(server_registry_path)
-        client = HttpLemonadeClient()
+        client = HttpModelServerClient()
         opencode = JsonOpenCodeConfig(opencode_path)
 
-        results = sync_models(registry, client, opencode)
-        assert set(results) == {"server-alpha: 1 models", "server-beta: 1 models"}
+        result = sync_models(registry, {"lemonade": client}, opencode)
+        assert set(result.summary) == {"server-alpha: 1 models", "server-beta: 1 models"}
 
         config = json.loads(opencode_path.read_text())
         assert "server-alpha" in config["provider"]
@@ -196,8 +196,8 @@ class TestListServersE2E:
         }) + "\n")
 
         registry = JsonServerRegistry(server_registry_path)
-        client = HttpLemonadeClient()
-        result = list_servers(registry, client)
+        client = HttpModelServerClient()
+        result = list_servers(registry, {"lemonade": client})
 
         assert len(result) == 1
         assert result[0]["name"] == "My Server"
@@ -236,9 +236,9 @@ class TestPreserveExistingConfig:
         }) + "\n")
 
         registry = JsonServerRegistry(server_registry_path)
-        client = HttpLemonadeClient()
+        client = HttpModelServerClient()
         opencode = JsonOpenCodeConfig(opencode_path)
-        sync_models(registry, client, opencode)
+        sync_models(registry, {"lemonade": client}, opencode)
 
         config = json.loads(opencode_path.read_text())
         assert config["$schema"] == "https://opencode.ai/config.json"

@@ -3,7 +3,10 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from opencode_config.adapters.opencode_config import JsonOpenCodeConfig
+from opencode_config.domain.ports import ConfigError
 
 
 class TestOpenCodeConfig:
@@ -31,3 +34,13 @@ class TestOpenCodeConfig:
         config.write_config({"a": 1})
         assert path.exists()
         assert json.loads(path.read_text()) == {"a": 1}
+
+    def test_invalid_json_raises_config_error(self, tmp_path: Path):
+        path = tmp_path / "opencode.json"
+        original = "{broken"
+        path.write_text(original)
+        with pytest.raises(ConfigError) as exc_info:
+            JsonOpenCodeConfig(path).load_config()
+        assert str(path) in str(exc_info.value)
+        assert "nothing was written" in str(exc_info.value)
+        assert path.read_text() == original

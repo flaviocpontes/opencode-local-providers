@@ -17,6 +17,14 @@ class TestIsChatModel:
         m = Model(id="x", recipe="llamacpp", labels=[])
         assert is_chat_model(m) is True
 
+    def test_ollama_recipe_passes_gate(self):
+        m = Model(id="qwen3:8b", recipe="ollama", labels=["vision"])
+        assert is_chat_model(m) is True
+
+    def test_ollama_empty_recipe_excluded(self):
+        m = Model(id="nomic-embed-text", recipe="", labels=[])
+        assert is_chat_model(m) is False
+
     def test_llamacpp_vision(self):
         m = Model(id="x", recipe="llamacpp", labels=["vision", "tool-calling"])
         assert is_chat_model(m) is True
@@ -57,6 +65,39 @@ class TestIsChatModel:
         m = Model(id="x", recipe="llamacpp", labels=["transcription"])
         assert is_chat_model(m) is False
 
+    # ── Lemonade v11.7.0 additions ──
+
+    @pytest.mark.parametrize("recipe", ["flm", "ryzenai-llm", "vllm"])
+    def test_v117_llm_recipes_pass(self, recipe):
+        m = Model(id="x", recipe=recipe, labels=[])
+        assert is_chat_model(m) is True
+
+    def test_chat_label_passes(self):
+        m = Model(id="x", recipe="llamacpp", labels=["chat"])
+        assert is_chat_model(m) is True
+
+    def test_any_to_text_chat_beats_transcription(self):
+        m = Model(id="Gemma-4", recipe="llamacpp",
+                  labels=["vision", "reasoning", "tool-calling", "transcription"])
+        assert is_chat_model(m) is True
+
+    def test_chat_transcription_label_is_chat(self):
+        m = Model(id="Qwen2.5-Omni", recipe="llamacpp", labels=["chat-transcription"])
+        assert is_chat_model(m) is True
+
+    def test_singular_embedding_label_excluded(self):
+        m = Model(id="x", recipe="llamacpp", labels=["embedding"])
+        assert is_chat_model(m) is False
+
+    def test_reranking_label_excluded(self):
+        m = Model(id="x", recipe="llamacpp", labels=["reranking"])
+        assert is_chat_model(m) is False
+
+    def test_realtime_transcription_alone_still_chat(self):
+        # realtime-transcription is a WebSocket capability, not a deployment mode
+        m = Model(id="x", recipe="llamacpp", labels=["realtime-transcription"])
+        assert is_chat_model(m) is True
+
 
 # ── derive_display_name ────────────────────────────────────────────────
 
@@ -73,6 +114,8 @@ class TestDeriveDisplayName:
         ("kokoro-v1", "kokoro-v1"),
         ("Qwen3.6-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking-NEO-CODE-Di-IMatrix-MAX-GGUF-Q4_K_M",
          "Qwen3.6-40B-Deckard-Heretic-Uncensored"),
+        ("gemma4:latest", "gemma4"),
+        ("qwen3:8b", "qwen3:8b"),
     ])
     def test_derivations(self, model_id, expected):
         assert derive_display_name(model_id) == expected

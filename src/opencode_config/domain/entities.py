@@ -7,6 +7,10 @@ class Server:
     port: int = 13305
     name: str | None = None
     enabled: bool = True
+    type: str = "lemonade"
+
+
+DEFAULT_PORTS = {"lemonade": 13305, "ollama": 11434}
 
 
 @dataclass
