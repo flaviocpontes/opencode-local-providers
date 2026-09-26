@@ -19,9 +19,9 @@
 
 ## 4. Verify before first publish
 
-- [ ] 4.1 Push to Gitea; confirm pipeline runs exactly once, lint+test green, semgrep+sonar execute
+- [x] 4.1 Push to Gitea; confirm pipeline runs exactly once, lint+test green, semgrep+sonar execute
 - [ ] 4.2 Confirm mirror triggered GitHub Actions: lint+test ran, semgrep/sonar skipped; publish skipped on branch pushes on both instances
-- [ ] 4.3 Confirm SonarQube project auto-created with coverage data and quality gate result wired to pipeline status
+- [x] 4.3 Confirm SonarQube project auto-created with coverage data and quality gate result wired to pipeline status
 
 ## 5. First release
 
