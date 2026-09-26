@@ -15,16 +15,16 @@
 
 - [x] 3.1 Configure PyPI trusted publisher for project `occfg`: publisher `flaviocpontes/opencode-local-providers`, workflow `ci.yml` (account + 2FA first)
 - [x] 3.2 Add Gitea secret `SONAR_TOKEN` and variable `SONAR_HOST_URL` (token from LAN SonarQube, project key `opencode_config`)
-- [ ] 3.3 Configure Gitea push mirror to `git@github.com:flaviocpontes/opencode-local-providers.git`
+- [x] 3.3 Add git remote `backup` → `git@github.com:flaviocpontes/opencode-local-providers.git` (direct pushes; no Gitea mirror)
 
 ## 4. Verify before first publish
 
 - [x] 4.1 Push to Gitea; confirm pipeline runs exactly once, lint+test green, semgrep+sonar execute
-- [ ] 4.2 Confirm mirror triggered GitHub Actions: lint+test ran, semgrep/sonar skipped; publish skipped on branch pushes on both instances
+- [ ] 4.2 Confirm push to `backup` triggered GitHub Actions: lint+test ran, semgrep/sonar skipped; publish skipped on branch pushes on both instances
 - [x] 4.3 Confirm SonarQube project auto-created with coverage data and quality gate result wired to pipeline status
 
 ## 5. First release
 
 - [ ] 5.1 Bump version in `pyproject.toml` to release version, push, wait for green pipeline
-- [ ] 5.2 Tag `v<version>` and push tag to Gitea; confirm mirror syncs it and the GitHub publish job uploads to PyPI
+- [ ] 5.2 Tag `v<version>` and push tag to Gitea and `backup`; confirm the GitHub publish job uploads to PyPI
 - [ ] 5.3 On a clean machine: `uvx occfg --version` runs without `--from`; `uv tool install occfg` puts `occfg` on PATH

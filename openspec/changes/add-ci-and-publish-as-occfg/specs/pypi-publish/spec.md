@@ -1,6 +1,6 @@
 ## Purpose
 
-Defines the release behavior: how tagged versions of the `occfg` distribution are published to PyPI from GitHub Actions on `flaviocpontes/opencode-local-providers` (triggered by semver tags mirrored from the primary Gitea repository), and the end-user installation contract the published package must satisfy.
+Defines the release behavior: how tagged versions of the `occfg` distribution are published to PyPI from GitHub Actions on `flaviocpontes/opencode-local-providers` (triggered by semver tags pushed to the GitHub backup remote), and the end-user installation contract the published package must satisfy.
 
 ## ADDED Requirements
 
@@ -18,12 +18,12 @@ The published distribution SHALL be named `occfg` and SHALL provide a console sc
 ### Requirement: Publishing is triggered only by semver tags on GitHub
 The publish job SHALL execute only when a tag following semantic versioning (`vMAJOR.MINOR.PATCH`, optional prerelease suffix) is pushed to the GitHub repository, and SHALL never execute on the Gitea instance.
 
-#### Scenario: Version tag mirrored to GitHub
-- **WHEN** a semver tag is pushed to Gitea, the push mirror synchronizes it to GitHub, and lint and test jobs pass
+#### Scenario: Version tag pushed to GitHub
+- **WHEN** a semver tag is pushed to the GitHub backup remote and lint and test jobs pass
 - **THEN** the built distribution is uploaded to PyPI
 
 #### Scenario: Tag present only on Gitea
-- **WHEN** a version tag exists on the Gitea instance (before or without mirror sync)
+- **WHEN** a version tag exists on the Gitea instance but was not pushed to GitHub
 - **THEN** no publish attempt occurs on Gitea
 
 #### Scenario: Regular push
