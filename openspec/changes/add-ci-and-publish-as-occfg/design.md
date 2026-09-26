@@ -38,7 +38,7 @@ Publisher: GitHub Actions on `flaviocpontes/opencode-local-providers`, workflow 
 `semgrep scan --config p/python --error` (rules fetched from registry at run time; runner has egress). No SARIF upload — Gitea code-scanning UI is not a thing and GitHub is the backup.
 
 ### D5: SonarQube via sonar-scanner-cli, gate enforced by wait
-Analysis of `main` only (Community Build). `sonar.qualitygate.wait=true` fails the job on gate failure; coverage XML produced by pytest (`--cov-report=xml` added to addopts) and passed via `sonar.python.coverage.reportPaths`. Project auto-provisioned on first scan with the token; project key fixed explicitly (e.g. `flaviocpontes_occfg`). `SONAR_TOKEN` lives in Gitea secrets; `SONAR_HOST_URL` in Gitea variables (it's a non-sensitive URL; the workflow reads `vars.SONAR_HOST_URL` — the sonar job is Gitea-only, so no GitHub variable is needed).
+Analysis of `main` only (Community Build). `sonar.qualitygate.wait=true` fails the job on gate failure; coverage XML produced by pytest (`--cov-report=xml` added to addopts) and passed via `sonar.python.coverage.reportPaths`. Project pre-created on SonarQube with key `opencode_config` (the CI token is scoped to it). `SONAR_TOKEN` lives in Gitea secrets; `SONAR_HOST_URL` in Gitea variables (it's a non-sensitive URL; the workflow reads `vars.SONAR_HOST_URL` — the sonar job is Gitea-only, so no GitHub variable is needed).
 
 ### D6: Gitea push-mirror to GitHub (repo setting, not CI)
 Mirror config lives in Gitea repo settings → zero workflow machinery; GitHub Actions triggers on synced pushes and tags, where the URL gates disable semgrep/sonar/publish.

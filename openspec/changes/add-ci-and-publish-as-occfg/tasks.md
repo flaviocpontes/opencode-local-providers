@@ -14,7 +14,7 @@
 ## 3. Gitea configuration (manual, outside repo)
 
 - [x] 3.1 Configure PyPI trusted publisher for project `occfg`: publisher `flaviocpontes/opencode-local-providers`, workflow `ci.yml` (account + 2FA first)
-- [x] 3.2 Add Gitea secret `SONAR_TOKEN` and variable `SONAR_HOST_URL` (token from LAN SonarQube, project key e.g. `flaviocpontes_occfg`)
+- [x] 3.2 Add Gitea secret `SONAR_TOKEN` and variable `SONAR_HOST_URL` (token from LAN SonarQube, project key `opencode_config`)
 - [ ] 3.3 Configure Gitea push mirror to `git@github.com:flaviocpontes/opencode-local-providers.git`
 
 ## 4. Verify before first publish

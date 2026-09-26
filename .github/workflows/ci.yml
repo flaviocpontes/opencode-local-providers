@@ -49,8 +49,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=flaviocpontes_occfg
-            -Dsonar.projectName=occfg
+            -Dsonar.projectKey=opencode_config
+            -Dsonar.projectName=opencode_config
             -Dsonar.sources=src
             -Dsonar.python.coverage.reportPaths=coverage.xml
             -Dsonar.qualitygate.wait=true
