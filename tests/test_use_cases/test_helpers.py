@@ -13,90 +13,85 @@ from opencode_config.domain.entities import Model
 # ── is_chat_model ──────────────────────────────────────────────────────
 
 class TestIsChatModel:
-    def test_llamacpp_no_labels(self):
-        m = Model(id="x", recipe="llamacpp", labels=[])
+    # ── chat label includes, regardless of recipe ──
+
+    def test_gufo_engine_chat_model_included(self):
+        m = Model(id="Qwen3.8-27B-Gufo", recipe="gufo",
+                  labels=["chat", "reasoning", "tool-calling", "vision", "mtp"])
         assert is_chat_model(m) is True
 
-    def test_ollama_recipe_passes_gate(self):
-        m = Model(id="qwen3:8b", recipe="ollama", labels=["vision"])
+    @pytest.mark.parametrize("recipe", [
+        "llamacpp", "llamacpp-hrx", "ryzenai-llm", "vllm", "ds4", "rocmfpx",
+        "gufo", "halogen", "flm", "ollama",
+    ])
+    def test_chat_label_included_regardless_of_recipe(self, recipe):
+        m = Model(id="x", recipe=recipe, labels=["chat"])
         assert is_chat_model(m) is True
 
-    def test_ollama_empty_recipe_excluded(self):
-        m = Model(id="nomic-embed-text", recipe="", labels=[])
-        assert is_chat_model(m) is False
-
-    def test_llamacpp_vision(self):
-        m = Model(id="x", recipe="llamacpp", labels=["vision", "tool-calling"])
+    def test_omni_capability_mix_included(self):
+        m = Model(id="Qwen2.5-Omni-7B", recipe="llamacpp",
+                  labels=["chat", "vision", "chat-transcription"])
         assert is_chat_model(m) is True
 
-    def test_llamacpp_reasoning(self):
-        m = Model(id="x", recipe="llamacpp", labels=["reasoning"])
-        assert is_chat_model(m) is True
-
-    def test_sd_cpp_excluded(self):
-        m = Model(id="x", recipe="sd-cpp", labels=["image"])
-        assert is_chat_model(m) is False
-
-    def test_whispercpp_excluded(self):
-        m = Model(id="x", recipe="whispercpp", labels=["transcription"])
-        assert is_chat_model(m) is False
-
-    def test_kokoro_excluded(self):
-        m = Model(id="x", recipe="kokoro", labels=["tts"])
-        assert is_chat_model(m) is False
-
-    def test_collection_omni_excluded(self):
-        m = Model(id="x", recipe="collection.omni", labels=[])
-        assert is_chat_model(m) is False
-
-    def test_embedding_label_excluded(self):
-        m = Model(id="x", recipe="llamacpp", labels=["embeddings"])
-        assert is_chat_model(m) is False
-
-    def test_image_label_excluded(self):
-        m = Model(id="x", recipe="llamacpp", labels=["image"])
-        assert is_chat_model(m) is False
-
-    def test_tts_label_excluded(self):
-        m = Model(id="x", recipe="llamacpp", labels=["tts"])
-        assert is_chat_model(m) is False
-
-    def test_transcription_label_excluded(self):
-        m = Model(id="x", recipe="llamacpp", labels=["transcription"])
-        assert is_chat_model(m) is False
-
-    # ── Lemonade v11.7.0 additions ──
-
-    @pytest.mark.parametrize("recipe", ["flm", "ryzenai-llm", "vllm"])
-    def test_v117_llm_recipes_pass(self, recipe):
-        m = Model(id="x", recipe=recipe, labels=[])
-        assert is_chat_model(m) is True
-
-    def test_chat_label_passes(self):
-        m = Model(id="x", recipe="llamacpp", labels=["chat"])
-        assert is_chat_model(m) is True
-
-    def test_any_to_text_chat_beats_transcription(self):
+    def test_chat_outranks_deployment_label(self):
         m = Model(id="Gemma-4", recipe="llamacpp",
-                  labels=["vision", "reasoning", "tool-calling", "transcription"])
+                  labels=["chat", "vision", "reasoning", "transcription"])
         assert is_chat_model(m) is True
 
-    def test_chat_transcription_label_is_chat(self):
-        m = Model(id="Qwen2.5-Omni", recipe="llamacpp", labels=["chat-transcription"])
+    # ── deployment labels exclude ──
+
+    @pytest.mark.parametrize("label", [
+        "embeddings", "embedding", "reranking", "transcription", "tts", "image",
+        "audio-generation", "classification", "classifier", "3d",
+    ])
+    def test_deployment_label_excluded(self, label):
+        m = Model(id="x", recipe="llamacpp", labels=[label])
+        assert is_chat_model(m) is False
+
+    def test_capability_labels_do_not_beat_deployment(self):
+        m = Model(id="x", recipe="llamacpp", labels=["vision", "transcription"])
+        assert is_chat_model(m) is False
+
+    # ── no mode label: default chat (label-less user models) ──
+
+    def test_label_less_user_model_included(self):
+        m = Model(id="user.MyModel-GGUF", recipe="llamacpp", labels=[])
         assert is_chat_model(m) is True
 
-    def test_singular_embedding_label_excluded(self):
-        m = Model(id="x", recipe="llamacpp", labels=["embedding"])
-        assert is_chat_model(m) is False
+    def test_capability_only_labels_included(self):
+        m = Model(id="x", recipe="llamacpp",
+                  labels=["vision", "tool-calling", "mtp"])
+        assert is_chat_model(m) is True
 
-    def test_reranking_label_excluded(self):
-        m = Model(id="x", recipe="llamacpp", labels=["reranking"])
-        assert is_chat_model(m) is False
+    def test_chat_transcription_alone_defaults_to_chat(self):
+        m = Model(id="Qwen2.5-Omni", recipe="llamacpp",
+                  labels=["chat-transcription"])
+        assert is_chat_model(m) is True
 
     def test_realtime_transcription_alone_still_chat(self):
         # realtime-transcription is a WebSocket capability, not a deployment mode
         m = Model(id="x", recipe="llamacpp", labels=["realtime-transcription"])
         assert is_chat_model(m) is True
+
+    # ── collection recipes exclude ──
+
+    def test_collection_omni_excluded_even_with_chat(self):
+        m = Model(id="x", recipe="collection.omni", labels=["chat"])
+        assert is_chat_model(m) is False
+
+    def test_collection_router_excluded(self):
+        m = Model(id="x", recipe="collection.router", labels=[])
+        assert is_chat_model(m) is False
+
+    # ── Ollama adapter label encoding ──
+
+    def test_ollama_chat_marker_included(self):
+        m = Model(id="qwen3:8b", recipe="ollama", labels=["vision", "chat"])
+        assert is_chat_model(m) is True
+
+    def test_ollama_not_chat_marker_excluded(self):
+        m = Model(id="nomic-embed-text", recipe="ollama", labels=["not-chat"])
+        assert is_chat_model(m) is False
 
 
 # ── derive_display_name ────────────────────────────────────────────────

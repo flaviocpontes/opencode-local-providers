@@ -8,6 +8,34 @@
         "baseURL": "http://192.168.0.20:13305/api/v1"
       },
       "models": {
+        "Anansi-35B-A3B-prose": {
+          "name": "Anansi-35B-A3B-prose",
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "Dolphin3-8B-code": {
+          "name": "Dolphin3-8B-code",
+          "limit": {
+            "context": 131072,
+            "output": 32768
+          }
+        },
+        "Dolphin3-8B-prose": {
+          "name": "Dolphin3-8B-prose",
+          "limit": {
+            "context": 131072,
+            "output": 32768
+          }
+        },
+        "Flint-GGUF": {
+          "name": "Flint",
+          "limit": {
+            "context": 262144,
+            "output": 65536
+          }
+        },
         "GLM-4.7-Flash-GGUF": {
           "name": "GLM-4.7-Flash",
           "limit": {
@@ -49,6 +77,109 @@
             "output": 32768
           }
         },
+        "Gemma-4-31B-it-GGUF": {
+          "name": "Gemma-4-31B",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "Gemma-4-31B-it-MTP-GGUF": {
+          "name": "Gemma-4-31B-MTP",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "Gemma-4-E4B-it-GGUF": {
+          "name": "Gemma-4-E4B",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 131072,
+            "output": 32768
+          }
+        },
+        "Hemmingway-1-Heretic-Uncensored-prose": {
+          "name": "Hemmingway-1-Heretic-Uncensored-prose",
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "Hermes3-8B-code": {
+          "name": "Hermes3-8B-code",
+          "limit": {
+            "context": 131072,
+            "output": 32768
+          }
+        },
+        "Hermes3-8B-prose": {
+          "name": "Hermes3-8B-prose",
+          "limit": {
+            "context": 131072,
+            "output": 32768
+          }
+        },
+        "K2-Horizon-32B-GGUF": {
+          "name": "K2-Horizon-32B",
+          "limit": {
+            "context": 524288,
+            "output": 65536
+          }
+        },
+        "K2-Horizon-MoVA-36B-A4B-GGUF": {
+          "name": "K2-Horizon-MoVA-36B-A4B",
+          "limit": {
+            "context": 524288,
+            "output": 65536
+          }
+        },
+        "Muse-Glimmer-30B-GGUF": {
+          "name": "Muse-Glimmer-30B",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 131072,
+            "output": 65536
+          }
+        },
         "Ornith-1.0-35B-GGUF-Q4_K_M": {
           "name": "Ornith-1.0-35B",
           "limit": {
@@ -65,6 +196,40 @@
         },
         "Qwen3.5-4B-MTP-GGUF": {
           "name": "Qwen3.5-4B-MTP",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "Qwen3.5-9B-Defiant-Uncensored-code": {
+          "name": "Qwen3.5-9B-Defiant-Uncensored-code",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "Qwen3.5-9B-Defiant-Uncensored-prose": {
+          "name": "Qwen3.5-9B-Defiant-Uncensored-prose",
           "modalities": {
             "input": [
               "text",
@@ -97,6 +262,23 @@
             "output": 32768
           }
         },
+        "Qwen3.6-35B-A3B-GGUF": {
+          "name": "Qwen3.6-35B-A3B",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
         "Qwen3.6-35B-A3B-MTP-GGUF": {
           "name": "Qwen3.6-35B-A3B-MTP",
           "modalities": {
@@ -114,8 +296,8 @@
             "output": 32768
           }
         },
-        "Qwen3.6-40B-Claude-4.6-Opus-Deckard-Heretic-Uncensored-Thinking-NEO-CODE-Di-IMatrix-MAX-GGUF-Q4_K_M": {
-          "name": "Qwen3.6-40B-Deckard-Heretic-Uncensored",
+        "Qwen3.6-35B-A3B-ThinkingCoder": {
+          "name": "Qwen3.6-35B-A3B-Coder",
           "modalities": {
             "input": [
               "text",
@@ -126,6 +308,197 @@
               "text"
             ]
           },
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "Qwen3.6-40B-Claude-Uncensored": {
+          "name": "Qwen3.6-40B-Claude-Uncensored",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "Qwen3.6-40B-Claude-Uncensored-code": {
+          "name": "Qwen3.6-40B-Claude-Uncensored-code",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "Qwen3.6-40B-Claude-Uncensored-prose": {
+          "name": "Qwen3.6-40B-Claude-Uncensored-prose",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "Qwen3.8-27B-GGUF": {
+          "name": "Qwen3.8-27B",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 65536
+          }
+        },
+        "Qwen3.8-27B-GGUF-UD-Q4_K_XL": {
+          "name": "Qwen3.8-27B",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "Qwen3.8-27B-Gufo": {
+          "name": "Qwen3.8-27B-Gufo",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 65536
+          }
+        },
+        "Qwen3.8-27B-NoThinking": {
+          "name": "Qwen3.8-27B-No",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "Qwen3.8-27B-TURBO-Uncensored-code": {
+          "name": "Qwen3.8-27B-TURBO-Uncensored-code",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "Qwen3.8-27B-TURBO-Uncensored-prose": {
+          "name": "Qwen3.8-27B-TURBO-Uncensored-prose",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "Qwen3.8-27B-ThinkingCoder": {
+          "name": "Qwen3.8-27B-Coder",
+          "modalities": {
+            "input": [
+              "text",
+              "image",
+              "pdf"
+            ],
+            "output": [
+              "text"
+            ]
+          },
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "gemma-4-12B-it-uncensored-GGUF-Q8_0": {
+          "name": "gemma-4-12B-uncensored",
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "gemma-4-12B-uncensored-code": {
+          "name": "gemma-4-12B-uncensored-code",
+          "limit": {
+            "context": 262144,
+            "output": 32768
+          }
+        },
+        "gemma-4-12B-uncensored-prose": {
+          "name": "gemma-4-12B-uncensored-prose",
           "limit": {
             "context": 262144,
             "output": 32768

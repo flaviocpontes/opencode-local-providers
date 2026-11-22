@@ -91,21 +91,16 @@ The tool writes to `opencode.json` under the top-level `provider` key (singular,
 
 ### Model filtering
 
-Only LLM-type chat models are included (Lemonade v11.7.0). The `recipe` field determines inclusion:
+Only chat models are included, classified by **labels** mirroring Lemonade's label-driven classifier (`model_types.h`, v11.9.0). The `recipe` field is not consulted for chat classification — only to exclude collection composites. Priority order:
 
-| `recipe` | Type | Include? |
-|---|---|---|
-| `llamacpp` | LLM (text/vision) | ✅ |
-| `flm` | LLM (FastFlowLM, NPU) | ✅ |
-| `ryzenai-llm` | LLM (ONNX NPU) | ✅ |
-| `vllm` | LLM (vLLM GPU, experimental) | ✅ |
-| `ollama` | LLM (Ollama servers) | ✅ |
-| `sd-cpp` | Image generation | ❌ |
-| `whispercpp` | Audio transcription | ❌ |
-| `kokoro` | Text-to-speech | ❌ |
-| `collection.omni` | Composite model | ❌ |
+1. `recipe` is `collection.omni` or `collection.router` → **exclude** (composite routers, even though labelled `chat`)
+2. labels contain `chat` → **include** (any engine: `llamacpp`, `llamacpp-hrx`, `ryzenai-llm`, `vllm`, `ds4`, `rocmfpx`, `gufo`, `halogen`, `flm`, or any future one)
+3. labels contain any deployment label → **exclude**: `embeddings`, `embedding`, `reranking`, `transcription`, `tts`, `image`, `audio-generation`, `classification`, `classifier`, `3d`
+4. labels name no mode at all → **include** (mirrors Lemonade's default that a label-less model deploys as an LLM; preserves user-installed `user.*` models pulled without explicit labels)
 
-Labels follow Lemonade's classifier priority: chat-indicator labels (`chat`, `vision`, `reasoning`, `tool-calling`, `tools`, `chat-transcription`) force inclusion; otherwise deployment labels (`embeddings`, `embedding`, `reranking`, `transcription`, `tts`, `image`) exclude the model. So an any-to-text LLM labelled `["vision", ..., "transcription"]` is included, while a pure Whisper model is not.
+`chat` outranks deployment labels, so an omni model labelled `["chat", "vision", "chat-transcription"]` is included. Capability labels alone (`vision`, `reasoning`, `tool-calling`, `tools`, `chat-transcription`, `mtp`) never force inclusion: `["vision", "transcription"]` without `chat` is excluded, since Lemonade would deploy it as transcription.
+
+The Ollama adapter encodes its capability probe in the same vocabulary: `chat` when the model reports `completion` (or capabilities are unknown), the internal `not-chat` marker when capabilities are known without completion.
 
 ### Display name derivation
 

@@ -142,6 +142,22 @@ class TestSyncModels:
         assert "llm" in opencode.written["provider"]["192.168.0.20"]["models"]
         assert "img" not in opencode.written["provider"]["192.168.0.20"]["models"]
 
+    def test_new_engine_chat_model_synced(self):
+        registry = FakeServerRegistry([
+            Server(host="192.168.0.20", port=13305, name="Desktop"),
+        ])
+        client = FakeModelServerClient([
+            Model(id="Qwen3.8-27B-Gufo", max_context_window=131072,
+                  recipe="gufo",
+                  labels=["chat", "reasoning", "tool-calling", "vision", "mtp"],
+                  downloaded=True),
+        ])
+        opencode = FakeOpenCodeConfig({})
+        result = sync_models(registry, {"lemonade": client}, opencode)
+        assert result.summary == ["desktop: 1 models"]
+        entry = opencode.written["provider"]["desktop"]["models"]["Qwen3.8-27B-Gufo"]
+        assert "image" in entry["modalities"]["input"]
+
     def test_preserves_existing_providers(self):
         registry = FakeServerRegistry([
             Server(host="192.168.0.20", port=13305, name="Desktop"),

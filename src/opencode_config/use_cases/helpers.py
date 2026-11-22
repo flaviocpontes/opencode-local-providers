@@ -3,18 +3,23 @@ import re
 from opencode_config.domain.entities import Server, Model
 
 
-# Mirrors Lemonade v11.7.0 model_types.h: chat-indicator labels beat deployment labels,
-# so an any-to-text LLM labelled ["vision", ..., "transcription"] is still chat.
-CHAT_LABELS = {"chat", "vision", "reasoning", "tool-calling", "tools", "chat-transcription"}
-SKIP_LABELS = {"embeddings", "embedding", "reranking", "transcription", "tts", "image"}
-CHAT_RECIPES = {"llamacpp", "flm", "ryzenai-llm", "vllm", "ollama"}
+# Mirrors Lemonade's label-driven classifier (model_types.h, v11.9.0): the
+# `chat` label outranks deployment labels, and a label set naming no deployment
+# mode defaults to chat — so label-less user models stay usable. Recipes are
+# not consulted, except to exclude collection composites.
+SKIP_LABELS = {
+    "embeddings", "embedding", "reranking", "transcription", "tts", "image",
+    "audio-generation", "classification", "classifier", "3d",
+    "not-chat",  # internal marker stamped by the Ollama adapter
+}
+COLLECTION_RECIPES = {"collection.omni", "collection.router"}
 
 
 def is_chat_model(model: Model) -> bool:
-    if model.recipe not in CHAT_RECIPES:
+    if model.recipe in COLLECTION_RECIPES:
         return False
     labels = set(model.labels)
-    if CHAT_LABELS & labels:
+    if "chat" in labels:
         return True
     return not (SKIP_LABELS & labels)
 

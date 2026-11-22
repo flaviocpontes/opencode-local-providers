@@ -46,10 +46,10 @@ class TestOllamaClient:
         assert len(models) == 2
         assert models[0].id == "gemma4:latest"
         assert models[0].recipe == "ollama"
-        assert models[0].labels == ["vision"]
+        assert models[0].labels == ["vision", "chat"]
         assert models[0].max_context_window == 131072
         assert models[0].size == pytest.approx(9.6, abs=0.1)
-        assert models[1].labels == ["reasoning"]
+        assert models[1].labels == ["reasoning", "chat"]
         assert models[1].max_context_window == 262144  # num_ctx overrides model_info
 
     def test_num_ctx_preferred_over_model_info(self, httpserver: HTTPServer):
@@ -68,7 +68,7 @@ class TestOllamaClient:
                        _show(capabilities=["embedding"]))
         models = HttpOllamaClient().fetch_models(
             Server(host="localhost", port=httpserver.port, type="ollama"))
-        assert models[0].recipe == ""  # fails the chat gate downstream
+        assert models[0].labels == ["not-chat"]  # fails the chat gate downstream
 
     def test_failed_show_degrades_to_unenriched(self, httpserver: HTTPServer):
         httpserver.expect_request("/api/tags").respond_with_json(_tags([
@@ -84,9 +84,8 @@ class TestOllamaClient:
             Server(host="localhost", port=httpserver.port, type="ollama"))
 
         assert models[0].id == "a"
-        assert models[0].recipe == "ollama"  # conservative include
+        assert models[0].labels == ["chat"]  # conservative include
         assert models[0].max_context_window is None
-        assert models[0].labels == []
         assert models[1].max_context_window == 4096  # sibling unaffected
 
     def test_tags_http_error_raises_server_error(self, httpserver: HTTPServer):

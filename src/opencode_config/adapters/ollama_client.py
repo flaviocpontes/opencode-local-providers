@@ -65,13 +65,16 @@ class HttpOllamaClient:
 
         labels = [CAPABILITY_LABELS[c] for c in capabilities if c in CAPABILITY_LABELS]
         is_chat = not capabilities or "completion" in capabilities
+        # Chat-ness rides in labels (shared filter is label-driven); "not-chat"
+        # marks capabilities known without completion, so they're excluded.
+        labels.append("chat" if is_chat else "not-chat")
         context = _context_from_parameters(parameters)
         if context is None:
             context = _context_from_model_info(model_info)
         size = item.get("size")
         return Model(
             id=model_id,
-            recipe="ollama" if is_chat else "",
+            recipe="ollama",
             labels=labels,
             max_context_window=context,
             size=size / 1e9 if size is not None else None,
