@@ -1,6 +1,6 @@
 [project]
 name = "occfg"
-version = "0.1.0"
+version = "0.1.1"
 description = "Sync Lemonade Server models into opencode.json"
 requires-python = ">=3.10"
 dependencies = ["httpx"]

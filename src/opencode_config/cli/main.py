@@ -33,7 +33,7 @@ def _package_version() -> str:
     try:
         return version("occfg")
     except PackageNotFoundError:
-        return "0.1.0"
+        return "0.1.1"
 
 
 def create_parser() -> argparse.ArgumentParser:
